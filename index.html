@@ -8,85 +8,30 @@
   <style>
     body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
     #cesiumContainer { width: 100vw; height: 100vh; }
-    #ui-panel {
-      position: absolute; top: 20px; left: 20px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      z-index: 10;
-    }
   </style>
 </head>
 <body>
-
-  <div id="ui-panel">
-    <h3>Service Catchments</h3>
-    <label>
-      <input type="checkbox" id="trainToggle" checked> Train Network (15-Min)
-    </label>
-  </div>
-
   <div id="cesiumContainer"></div>
-
   <script>
-    // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 2. Initialize Viewer in STRICT 2D MODE with a flat street map
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      sceneMode: Cesium.SceneMode.SCENE2D, // Forces flat 2D map
+      sceneMode: Cesium.SceneMode.SCENE2D, 
       animation: false,
       timeline: false,
-      baseLayerPicker: true,
-      baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
-        url : 'https://a.tile.openstreetmap.org/'
-      }))
+      baseLayerPicker: false
     });
 
-    let trainDataSource;
-    
-    // 3. Load your data (No clamping needed on a flat map, making it much faster)
+    // Native load only. No heavy loops.
     const trainPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/servicetrain.geojson', {
         stroke: Cesium.Color.RED,
         fill: Cesium.Color.RED.withAlpha(0.6),
-        strokeWidth: 3
+        strokeWidth: 2
     });
 
     trainPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
-        trainDataSource = dataSource;
-
-        // Force styling (Simplified for 2D performance)
-        const entities = dataSource.entities.values;
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
-            
-            if (entity.polyline) {
-                entity.polyline.material = Cesium.Color.RED;
-                entity.polyline.width = 5;
-            }
-            if (entity.polygon) {
-                entity.polygon.material = Cesium.Color.RED.withAlpha(0.6);
-                entity.polygon.outline = true;
-                entity.polygon.outlineColor = Cesium.Color.RED;
-            }
-            if (entity.point) {
-                entity.point.color = Cesium.Color.RED;
-                entity.point.pixelSize = 10;
-            }
-        }
-        
-        // Auto-fly to the data
         viewer.flyTo(dataSource);
-        
-    }).catch(function(error) {
-        console.error(`Error loading GeoJSON: ${error}`);
-    });
-
-    // 4. Checkbox Logic
-    document.getElementById('trainToggle').addEventListener('change', function(e) {
-        if (trainDataSource) {
-            trainDataSource.show = e.target.checked;
-        }
     });
   </script>
 </body>
