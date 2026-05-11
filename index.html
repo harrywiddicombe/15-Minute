@@ -21,14 +21,14 @@
   <div id="ui-panel">
     <h3>Service Catchments</h3>
     <label>
-      <input type="checkbox" id="schoolToggle" checked> 15-Min to Schools
+      <input type="checkbox" id="testToggle" checked> Test Layer (TESTY)
     </label>
   </div>
 
   <div id="cesiumContainer"></div>
 
   <script>
-    // 1. Add your Cesium Ion Token here
+    // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
     // 2. Initialize the Viewer with Google Photorealistic 3D Tiles
@@ -50,7 +50,7 @@
         console.log(`Error loading tileset: ${error}`);
     }
 
-    // 3. Set the starting camera view over Reservoir
+    // 3. Set the starting camera view over Reservoir, Victoria
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(145.004, -37.716, 2500.0), // Lon, Lat, Height in meters
       orientation: {
@@ -59,25 +59,25 @@
       }
     });
 
-    // 4. Load your GeoJSON Data
-    let schoolDataSource;
+    // 4. Load your Custom GeoJSON Data (TESTY.geojson)
+    let testDataSource;
     
-    // Replace the URL with the raw GitHub link to your uploaded GeoJSON
-    const schoolPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/15-minute-reservoir/main/schools_15min.geojson', {
+    // Notice the URL uses your username and specific filename
+    const testPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-minute-reservoir/main/TESTY.geojson', {
         stroke: Cesium.Color.RED,
-        fill: Cesium.Color.RED.withAlpha(0.4), // 40% opacity so you can see the city underneath
+        fill: Cesium.Color.RED.withAlpha(0.4), // 40% opacity 
         strokeWidth: 2
     });
 
-    schoolPromise.then(function(dataSource) {
+    testPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
-        schoolDataSource = dataSource;
+        testDataSource = dataSource;
     });
 
     // 5. Checkbox Logic
-    document.getElementById('schoolToggle').addEventListener('change', function(e) {
-        if (schoolDataSource) {
-            schoolDataSource.show = e.target.checked;
+    document.getElementById('testToggle').addEventListener('change', function(e) {
+        if (testDataSource) {
+            testDataSource.show = e.target.checked;
         }
     });
   </script>
