@@ -28,38 +28,29 @@
   <div id="cesiumContainer"></div>
 
   <script>
-    // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 2. Initialize Viewer (The original 3D Globe with Terrain)
+    // 1. Initialize Viewer with 3D TERRAIN (Hills/Valleys), but NO 3D buildings
     const viewer = new Cesium.Viewer('cesiumContainer', {
       terrain: Cesium.Terrain.fromWorldTerrain(), 
       animation: false,
       timeline: false,
-      baseLayerPicker: false
+      baseLayerPicker: true
     });
 
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
-    // 3. Add Google Photorealistic 3D Tiles
-    Cesium.Cesium3DTileset.fromIonAssetId(2275207).then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-    }).catch(function(error) {
-        console.error(`Error loading tileset: ${error}`);
-    });
-
     let trainDataSource;
     
-    // 4. Load your specific servicetrain.geojson file
+    // 2. Load your data (Clamping to terrain is much faster than clamping to buildings)
     const trainPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/servicetrain.geojson', {
-        clampToGround: true // Drapes it over the ground
+        clampToGround: true 
     });
 
     trainPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
         trainDataSource = dataSource;
 
-        // Force styling so it paints bright red and uses X-Ray vision
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
@@ -67,7 +58,7 @@
             if (entity.polyline) {
                 entity.polyline.material = Cesium.Color.RED;
                 entity.polyline.width = 5;
-                entity.polyline.depthFailMaterial = Cesium.Color.RED; // X-Ray
+                entity.polyline.depthFailMaterial = Cesium.Color.RED;
             }
             if (entity.polygon) {
                 entity.polygon.material = Cesium.Color.RED.withAlpha(0.6);
@@ -77,18 +68,16 @@
             if (entity.point) {
                 entity.point.color = Cesium.Color.RED;
                 entity.point.pixelSize = 10;
-                entity.point.disableDepthTestDistance = Number.POSITIVE_INFINITY; // X-Ray
+                entity.point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
             }
         }
         
-        // Auto-fly to the exact location of the train network
         viewer.flyTo(dataSource);
         
     }).catch(function(error) {
         console.error(`Error loading GeoJSON: ${error}`);
     });
 
-    // 5. Checkbox Logic
     document.getElementById('trainToggle').addEventListener('change', function(e) {
         if (trainDataSource) {
             trainDataSource.show = e.target.checked;
