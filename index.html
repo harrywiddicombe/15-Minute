@@ -31,17 +31,22 @@
     // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 2. Initialize Viewer in strict 2D mode
+    // 2. Initialize Viewer in strict 2D mode WITH A SIMPLE STREET MAP
     const viewer = new Cesium.Viewer('cesiumContainer', {
       sceneMode: Cesium.SceneMode.SCENE2D, 
       animation: false,
       timeline: false,
-      baseLayerPicker: false
+      baseLayerPicker: true, // I left this on! You can click the map icon in the top right to change map styles.
+      baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+        url : 'https://a.tile.openstreetmap.org/'
+      }))
     });
+
+    // NOTICE: Google 3D Photorealistic Tiles code has been completely deleted!
 
     let trainDataSource;
     
-    // 3. Load your brand new GeoJSON file
+    // 3. Load your GeoJSON file
     const trainPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/servicetrain.geojson', {
         stroke: Cesium.Color.RED,
         fill: Cesium.Color.RED.withAlpha(0.6),
@@ -52,7 +57,7 @@
         viewer.dataSources.add(dataSource);
         trainDataSource = dataSource;
 
-        // Force styling for all geometry types (Lines, Polygons, Points)
+        // Force styling for all geometry types
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
