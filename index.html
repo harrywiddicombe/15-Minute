@@ -21,7 +21,7 @@
   <div id="ui-panel">
     <h3>Service Catchments</h3>
     <label>
-      <input type="checkbox" id="testToggle" checked> Test Layer (TESTY)
+      <input type="checkbox" id="trainToggle" checked> Train Network (15-Min)
     </label>
   </div>
 
@@ -31,32 +31,28 @@
     // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 2. Initialize Viewer in strict 2D mode with flat earth
+    // 2. Initialize Viewer in strict 2D mode
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      sceneMode: Cesium.SceneMode.SCENE2D, // FORCES 2D FLAT MAP
+      sceneMode: Cesium.SceneMode.SCENE2D, 
       animation: false,
       timeline: false,
       baseLayerPicker: false
     });
 
-    // 3. Set the starting camera view directly over Reservoir
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(145.004, -37.716, 25000.0) // 25km high
-    });
-
-    // 4. Load Custom GeoJSON Data
-    let testDataSource;
+    let trainDataSource;
     
-    const testPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/TESTY.geojson', {
+    // 3. Load your brand new GeoJSON file
+    const trainPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/servicetrain.geojson', {
         stroke: Cesium.Color.RED,
-        strokeWidth: 5
+        fill: Cesium.Color.RED.withAlpha(0.6),
+        strokeWidth: 3
     });
 
-    testPromise.then(function(dataSource) {
+    trainPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
-        testDataSource = dataSource;
+        trainDataSource = dataSource;
 
-        // Force styling for lines and polygons
+        // Force styling for all geometry types (Lines, Polygons, Points)
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
@@ -69,19 +65,23 @@
                 entity.polygon.outline = true;
                 entity.polygon.outlineColor = Cesium.Color.RED;
             }
+            if (entity.point) {
+                entity.point.color = Cesium.Color.RED;
+                entity.point.pixelSize = 10;
+            }
         }
         
-        // Auto-fly to the exact location of the data
+        // Auto-fly to the exact location of the train network
         viewer.flyTo(dataSource);
         
     }).catch(function(error) {
         console.error(`Error loading GeoJSON: ${error}`);
     });
 
-    // 5. Checkbox Logic
-    document.getElementById('testToggle').addEventListener('change', function(e) {
-        if (testDataSource) {
-            testDataSource.show = e.target.checked;
+    // 4. Checkbox Logic
+    document.getElementById('trainToggle').addEventListener('change', function(e) {
+        if (trainDataSource) {
+            trainDataSource.show = e.target.checked;
         }
     });
   </script>
