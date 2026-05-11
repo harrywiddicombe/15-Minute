@@ -39,7 +39,7 @@
       baseLayerPicker: false
     });
 
-    // 3. Add Google Photorealistic 3D Tiles (Updated Promise syntax)
+    // 3. Add Google Photorealistic 3D Tiles
     Cesium.Cesium3DTileset.fromIonAssetId(2275207).then(function(tileset) {
         viewer.scene.primitives.add(tileset);
     }).catch(function(error) {
@@ -55,13 +55,13 @@
       }
     });
 
-    // 5. Load Custom GeoJSON Data (Updated with correct repository name)
+    // 5. Load Custom GeoJSON Data (Lines clamped to ground)
     let testDataSource;
     
     const testPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/TESTY.geojson', {
         stroke: Cesium.Color.RED,
-        fill: Cesium.Color.RED.withAlpha(0.4), 
-        strokeWidth: 2
+        strokeWidth: 5, // Made thicker so it stands out
+        clampToGround: true // This forces the lines out of the ground and over the 3D terrain
     });
 
     testPromise.then(function(dataSource) {
