@@ -28,29 +28,34 @@
   <div id="cesiumContainer"></div>
 
   <script>
+    // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 1. Initialize Viewer with 3D TERRAIN (Hills/Valleys), but NO 3D buildings
+    // 2. Initialize Viewer in STRICT 2D MODE with a flat street map
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrain: Cesium.Terrain.fromWorldTerrain(), 
+      sceneMode: Cesium.SceneMode.SCENE2D, // Forces flat 2D map
       animation: false,
       timeline: false,
-      baseLayerPicker: true
+      baseLayerPicker: true,
+      baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+        url : 'https://a.tile.openstreetmap.org/'
+      }))
     });
-
-    viewer.scene.globe.depthTestAgainstTerrain = true;
 
     let trainDataSource;
     
-    // 2. Load your data (Clamping to terrain is much faster than clamping to buildings)
+    // 3. Load your data (No clamping needed on a flat map, making it much faster)
     const trainPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/servicetrain.geojson', {
-        clampToGround: true 
+        stroke: Cesium.Color.RED,
+        fill: Cesium.Color.RED.withAlpha(0.6),
+        strokeWidth: 3
     });
 
     trainPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
         trainDataSource = dataSource;
 
+        // Force styling (Simplified for 2D performance)
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
@@ -58,7 +63,6 @@
             if (entity.polyline) {
                 entity.polyline.material = Cesium.Color.RED;
                 entity.polyline.width = 5;
-                entity.polyline.depthFailMaterial = Cesium.Color.RED;
             }
             if (entity.polygon) {
                 entity.polygon.material = Cesium.Color.RED.withAlpha(0.6);
@@ -68,16 +72,17 @@
             if (entity.point) {
                 entity.point.color = Cesium.Color.RED;
                 entity.point.pixelSize = 10;
-                entity.point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
             }
         }
         
+        // Auto-fly to the data
         viewer.flyTo(dataSource);
         
     }).catch(function(error) {
         console.error(`Error loading GeoJSON: ${error}`);
     });
 
+    // 4. Checkbox Logic
     document.getElementById('trainToggle').addEventListener('change', function(e) {
         if (trainDataSource) {
             trainDataSource.show = e.target.checked;
