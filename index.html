@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The 15-Minute Suburb</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
+    #cesiumContainer { width: 100vw; height: 100vh; }
+    #ui-panel {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="ui-panel">
+    <h3>Service Catchments</h3>
+    <label>
+      <input type="checkbox" id="schoolToggle" checked> 15-Min to Schools
+    </label>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <script>
+    // 1. Add your Cesium Ion Token here
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
+
+    // 2. Initialize the Viewer with Google Photorealistic 3D Tiles
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain(),
+      animation: false,
+      timeline: false,
+      baseLayerPicker: false
+    });
+
+    // Add Google 3D Tiles
+    try {
+        const tileset = viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+                url: Cesium.IonResource.fromAssetId(2275207), // Google Photorealistic ID
+            })
+        );
+    } catch (error) {
+        console.log(`Error loading tileset: ${error}`);
+    }
+
+    // 3. Set the starting camera view over Reservoir
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(145.004, -37.716, 2500.0), // Lon, Lat, Height in meters
+      orientation: {
+        heading: Cesium.Math.toRadians(0.0), // Face North
+        pitch: Cesium.Math.toRadians(-45.0), // Look down at an angle
+      }
+    });
+
+    // 4. Load your GeoJSON Data
+    let schoolDataSource;
+    
+    // Replace the URL with the raw GitHub link to your uploaded GeoJSON
+    const schoolPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/15-minute-reservoir/main/schools_15min.geojson', {
+        stroke: Cesium.Color.RED,
+        fill: Cesium.Color.RED.withAlpha(0.4), // 40% opacity so you can see the city underneath
+        strokeWidth: 2
+    });
+
+    schoolPromise.then(function(dataSource) {
+        viewer.dataSources.add(dataSource);
+        schoolDataSource = dataSource;
+    });
+
+    // 5. Checkbox Logic
+    document.getElementById('schoolToggle').addEventListener('change', function(e) {
+        if (schoolDataSource) {
+            schoolDataSource.show = e.target.checked;
+        }
+    });
+  </script>
+</body>
+</html>
