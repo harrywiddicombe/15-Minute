@@ -1,61 +1,73 @@
-<script> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The 15-Minute Suburb</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
+    #cesiumContainer { width: 100vw; height: 100vh; }
+    #ui-panel {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="ui-panel">
+    <h3>Service Catchments</h3>
+    <label>
+      <input type="checkbox" id="testToggle" checked> Test Layer (TESTY)
+    </label>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <script>
     // 1. Your specific Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjE3MWQwMy1iNDFlLTQxNjUtYTRlMS01N2M1MTQzMWUzODgiLCJpZCI6NDI3NzUxLCJzdWIiOiJoYXJyeXdpZGRpY29tYmUiLCJpc3MiOiJodHRwczovL2lvbi5jZXNpdW0uY29tIiwiYXVkIjoiMTUtTWludXRlIiwiaWF0IjoxNzc4NDg0NDIwfQ.nkJq_-tSzrMCbWVGGpxu9PavFzTTAIicpjr3J1Wh8Mw';
 
-    // 2. Initialize Viewer 
+    // 2. Initialize Viewer in strict 2D mode with flat earth
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrain: Cesium.Terrain.fromWorldTerrain(), 
+      sceneMode: Cesium.SceneMode.SCENE2D, // FORCES 2D FLAT MAP
       animation: false,
       timeline: false,
       baseLayerPicker: false
     });
 
-    // 3. Add Google Photorealistic 3D Tiles
-    Cesium.Cesium3DTileset.fromIonAssetId(2275207).then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-    }).catch(function(error) {
-        console.error(`Error loading tileset: ${error}`);
+    // 3. Set the starting camera view directly over Reservoir
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(145.004, -37.716, 25000.0) // 25km high
     });
 
-    // 4. Load Custom GeoJSON Data (Force basic red styling immediately)
+    // 4. Load Custom GeoJSON Data
     let testDataSource;
     
     const testPromise = Cesium.GeoJsonDataSource.load('https://raw.githubusercontent.com/harrywiddicombe/15-Minute/main/TESTY.geojson', {
         stroke: Cesium.Color.RED,
-        fill: Cesium.Color.RED.withAlpha(0.6),
-        strokeWidth: 5,
-        clampToGround: true 
+        strokeWidth: 5
     });
 
     testPromise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
         testDataSource = dataSource;
 
-        // THE GOD MODE X-RAY TRICK: Target every possible geometry type
+        // Force styling for lines and polygons
         const entities = dataSource.entities.values;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
-            
-            // If QGIS exported it as Lines
             if (entity.polyline) {
                 entity.polyline.material = Cesium.Color.RED;
                 entity.polyline.width = 5;
-                entity.polyline.depthFailMaterial = Cesium.Color.RED; // X-Ray
             }
-            
-            // If QGIS exported it as Polygons/Buffers
             if (entity.polygon) {
                 entity.polygon.material = Cesium.Color.RED.withAlpha(0.6);
                 entity.polygon.outline = true;
                 entity.polygon.outlineColor = Cesium.Color.RED;
-                entity.polygon.zIndex = 100; // Force it on top
-            }
-
-            // If QGIS exported it as Points/Nodes
-            if (entity.point) {
-                entity.point.color = Cesium.Color.RED;
-                entity.point.pixelSize = 10;
-                entity.point.disableDepthTestDistance = Number.POSITIVE_INFINITY; // X-Ray
             }
         }
         
@@ -73,3 +85,5 @@
         }
     });
   </script>
+</body>
+</html>
